@@ -21,7 +21,12 @@ import {
   type Stats,
   type WriteStream,
 } from 'node:fs';
-import { spawn, execSync, type ChildProcess } from 'node:child_process';
+import {
+  spawn,
+  execSync,
+  spawnSync,
+  type ChildProcess,
+} from 'node:child_process';
 import EventEmitter from 'node:events';
 import { Stream } from 'node:stream';
 import * as path from 'node:path';
@@ -39,6 +44,7 @@ vi.mock('node:child_process', async (importOriginal) => {
     ...actual,
     spawn: vi.fn(),
     execSync: vi.fn(),
+    spawnSync: vi.fn(),
   };
 });
 vi.mock('@google/gemini-cli-core', async (importOriginal) => {
@@ -111,7 +117,7 @@ describe('clipboardUtils', () => {
     it('should return true when wl-paste shows image type (Wayland)', async () => {
       mockPlatform('linux');
       process.env['XDG_SESSION_TYPE'] = 'wayland';
-      vi.mocked(execSync).mockReturnValue(Buffer.from('')); // command -v succeeds
+      vi.mocked(spawnSync).mockReturnValue({ status: 0 } as any); // tool check succeeds
       vi.mocked(spawnAsync).mockResolvedValueOnce({
         stdout: 'image/png\ntext/plain',
         stderr: '',
@@ -120,8 +126,9 @@ describe('clipboardUtils', () => {
       const result = await clipboardUtils.clipboardHasImage();
 
       expect(result).toBe(true);
-      expect(execSync).toHaveBeenCalledWith(
-        expect.stringContaining('wl-paste'),
+      expect(spawnSync).toHaveBeenCalledWith(
+        'wl-paste',
+        ['--version'],
         expect.anything(),
       );
       expect(spawnAsync).toHaveBeenCalledWith('wl-paste', ['--list-types']);
@@ -130,7 +137,7 @@ describe('clipboardUtils', () => {
     it('should return true when xclip shows image type (X11)', async () => {
       mockPlatform('linux');
       process.env['XDG_SESSION_TYPE'] = 'x11';
-      vi.mocked(execSync).mockReturnValue(Buffer.from('')); // command -v succeeds
+      vi.mocked(spawnSync).mockReturnValue({ status: 0 } as any); // tool check succeeds
       vi.mocked(spawnAsync).mockResolvedValueOnce({
         stdout: 'image/png\nTARGETS',
         stderr: '',
@@ -139,8 +146,9 @@ describe('clipboardUtils', () => {
       const result = await clipboardUtils.clipboardHasImage();
 
       expect(result).toBe(true);
-      expect(execSync).toHaveBeenCalledWith(
-        expect.stringContaining('xclip'),
+      expect(spawnSync).toHaveBeenCalledWith(
+        'xclip',
+        ['--version'],
         expect.anything(),
       );
       expect(spawnAsync).toHaveBeenCalledWith('xclip', [
@@ -155,7 +163,7 @@ describe('clipboardUtils', () => {
     it('should return false if tool fails', async () => {
       mockPlatform('linux');
       process.env['XDG_SESSION_TYPE'] = 'wayland';
-      vi.mocked(execSync).mockReturnValue(Buffer.from(''));
+      vi.mocked(spawnSync).mockReturnValue({ status: 0 } as any);
       vi.mocked(spawnAsync).mockRejectedValueOnce(new Error('wl-paste failed'));
 
       const result = await clipboardUtils.clipboardHasImage();
@@ -166,7 +174,7 @@ describe('clipboardUtils', () => {
     it('should return false if no image type is found', async () => {
       mockPlatform('linux');
       process.env['XDG_SESSION_TYPE'] = 'wayland';
-      vi.mocked(execSync).mockReturnValue(Buffer.from(''));
+      vi.mocked(spawnSync).mockReturnValue({ status: 0 } as any);
       vi.mocked(spawnAsync).mockResolvedValueOnce({
         stdout: 'text/plain',
         stderr: '',
@@ -180,8 +188,18 @@ describe('clipboardUtils', () => {
     it('should return false if tool not found', async () => {
       mockPlatform('linux');
       process.env['XDG_SESSION_TYPE'] = 'wayland';
-      vi.mocked(execSync).mockImplementation(() => {
-        throw new Error('Command not found');
+      vi.mocked(spawnSync).mockReturnValue({ status: 1 } as any);
+
+      const result = await clipboardUtils.clipboardHasImage();
+
+      expect(result).toBe(false);
+    });
+
+    it('should return false if spawnSync throws (tool not found)', async () => {
+      mockPlatform('linux');
+      process.env['XDG_SESSION_TYPE'] = 'wayland';
+      vi.mocked(spawnSync).mockImplementation(() => {
+        throw new Error('Spawn failed');
       });
 
       const result = await clipboardUtils.clipboardHasImage();
@@ -228,14 +246,14 @@ describe('clipboardUtils', () => {
       hasImage = true,
     ) => {
       process.env['XDG_SESSION_TYPE'] = type;
-      vi.mocked(execSync).mockReturnValue(Buffer.from(''));
+      vi.mocked(spawnSync).mockReturnValue({ status: 0 } as any);
       vi.mocked(spawnAsync).mockResolvedValueOnce({
         stdout: hasImage ? 'image/png' : 'text/plain',
         stderr: '',
       });
       await clipboardUtils.clipboardHasImage();
       vi.mocked(spawnAsync).mockClear();
-      vi.mocked(execSync).mockClear();
+      vi.mocked(spawnSync).mockClear();
     };
 
     it('should save image using wl-paste if detected', async () => {

@@ -6,7 +6,7 @@
 
 import * as fs from 'node:fs/promises';
 import { createWriteStream, existsSync, statSync } from 'node:fs';
-import { execSync, spawn } from 'node:child_process';
+import { spawn, spawnSync } from 'node:child_process';
 import * as path from 'node:path';
 import {
   debugLogger,
@@ -49,9 +49,14 @@ function getUserLinuxClipboardTool(): typeof linuxClipboardTool {
 
   try {
     // output is piped to stdio: 'ignore' to suppress the path printing to console
-    execSync(`command -v ${toolName}`, { stdio: 'ignore' });
-    linuxClipboardTool = toolName;
-    return toolName;
+    const { status, error } = spawnSync(toolName, ['--version'], {
+      stdio: 'ignore',
+    });
+    if (status === 0 && !error) {
+      linuxClipboardTool = toolName;
+      return toolName;
+    }
+    return null;
   } catch (e) {
     debugLogger.warn(`${toolName} not found. Please install it: ${e}`);
     return null;
