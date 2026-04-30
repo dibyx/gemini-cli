@@ -86,7 +86,7 @@ describe('InitCommand', () => {
 
   describe('execute', () => {
     it('handles info from performInit', async () => {
-      vi.mocked(performInit).mockReturnValue({
+      vi.mocked(performInit).mockResolvedValue({
         type: 'message',
         messageType: 'info',
         content: 'GEMINI.md already exists.',
@@ -121,7 +121,7 @@ describe('InitCommand', () => {
     });
 
     it('handles error from performInit', async () => {
-      vi.mocked(performInit).mockReturnValue({
+      vi.mocked(performInit).mockResolvedValue({
         type: 'message',
         messageType: 'error',
         content: 'An error occurred.',
@@ -144,7 +144,7 @@ describe('InitCommand', () => {
 
     describe('when handling submit_prompt', () => {
       beforeEach(() => {
-        vi.mocked(performInit).mockReturnValue({
+        vi.mocked(performInit).mockResolvedValue({
           type: 'submit_prompt',
           content: 'Create a new GEMINI.md file.',
         } as CommandActionReturn);

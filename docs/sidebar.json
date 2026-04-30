@@ -183,6 +183,10 @@
             "label": "Project context (GEMINI.md)",
             "slug": "docs/cli/gemini-md"
           },
+          {
+            "label": "Generate context (/init)",
+            "slug": "docs/cli/init-command"
+          },
           { "label": "Settings", "slug": "docs/cli/settings" },
           {
             "label": "System prompt override",

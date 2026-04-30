@@ -13,7 +13,7 @@ import type { CommandContext } from './types.js';
 import type { SubmitPromptActionReturn } from '@google/gemini-cli-core';
 
 // Mock the 'fs' module
-vi.mock('fs', async (importOriginal) => {
+vi.mock('node:fs', async (importOriginal) => {
   const actual = await importOriginal<typeof import('node:fs')>();
   return {
     ...actual,
@@ -45,20 +45,18 @@ describe('initCommand', () => {
     vi.clearAllMocks();
   });
 
-  it('should inform the user if GEMINI.md already exists', async () => {
+  it('should return confirm_action if GEMINI.md already exists', async () => {
     // Arrange: Simulate that the file exists
     vi.mocked(fs.existsSync).mockReturnValue(true);
 
     // Act: Run the command's action
     const result = await initCommand.action!(mockContext, '');
 
-    // Assert: Check for the correct informational message
-    expect(result).toEqual({
-      type: 'message',
-      messageType: 'info',
-      content:
-        'A GEMINI.md file already exists in this directory. No changes were made.',
-    });
+    // Assert: Check for confirm_action
+    expect(result?.type).toBe('confirm_action');
+    if (result?.type === 'confirm_action') {
+      expect(result.originalInvocation.raw).toBe('/init');
+    }
     // Assert: Ensure no file was written
     expect(fs.writeFileSync).not.toHaveBeenCalled();
   });
@@ -80,7 +78,7 @@ describe('initCommand', () => {
     expect(mockContext.ui.addItem).toHaveBeenCalledWith(
       {
         type: 'info',
-        text: 'Empty GEMINI.md created. Now analyzing the project to populate it.',
+        text: 'Analyzing project structure to generate GEMINI.md...',
       },
       expect.any(Number),
     );
