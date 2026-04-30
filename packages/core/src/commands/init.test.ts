@@ -4,12 +4,22 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import { expect, describe, it } from 'vitest';
+import { expect, describe, it, vi } from 'vitest';
 import { performInit } from './init.js';
+import * as fs from 'node:fs';
+
+vi.mock('node:fs', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('node:fs')>();
+  return {
+    ...actual,
+    existsSync: vi.fn(),
+    readFileSync: vi.fn(),
+  };
+});
 
 describe('performInit', () => {
-  it('returns info if GEMINI.md already exists', () => {
-    const result = performInit(true);
+  it('returns info if GEMINI.md already exists', async () => {
+    const result = await performInit(true);
 
     expect(result.type).toBe('message');
     if (result.type === 'message') {
@@ -18,8 +28,9 @@ describe('performInit', () => {
     }
   });
 
-  it('returns submit_prompt if GEMINI.md does not exist', () => {
-    const result = performInit(false);
+  it('returns submit_prompt if GEMINI.md does not exist', async () => {
+    vi.mocked(fs.existsSync).mockReturnValue(false);
+    const result = await performInit(false, '/test/dir');
     expect(result.type).toBe('submit_prompt');
 
     if (result.type === 'submit_prompt') {

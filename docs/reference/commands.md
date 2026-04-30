@@ -209,6 +209,20 @@ Slash commands provide meta-level control over the CLI itself.
   - **`list`** (or `show`, `panel`):
     - **Description:** Display all registered hooks with their status.
 
+- **Description:** Automatically analyze the project structure and create a
+  tailored `GEMINI.md` context file.
+- **Usage:** `/init`
+- **Details:** See the [Generate Context documentation](../cli/init-command.md)
+  for more information.
+
+### `/init`
+
+- **Description:** Automatically analyze the project structure and create a
+  tailored `GEMINI.md` context file.
+- **Usage:** `/init`
+- **Details:** See the [Generate Context documentation](../cli/init-command.md)
+  for more information.
+
 ### `/ide`
 
 - **Description:** Manage IDE integration.
@@ -221,8 +235,6 @@ Slash commands provide meta-level control over the CLI itself.
     - **Description:** Install required IDE companion.
   - **`status`**:
     - **Description:** Check status of IDE integration.
-
-### `/init`
 
 - **Description:** To help users easily create a `GEMINI.md` file, this command
   analyzes the current directory and generates a tailored context file, making

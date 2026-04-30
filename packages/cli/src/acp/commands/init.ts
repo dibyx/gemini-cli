@@ -28,7 +28,7 @@ export class InitCommand implements Command {
     }
 
     const geminiMdPath = path.join(targetDir, 'GEMINI.md');
-    const result = performInit(fs.existsSync(geminiMdPath));
+    const result = await performInit(fs.existsSync(geminiMdPath), targetDir);
 
     switch (result.type) {
       case 'message':
