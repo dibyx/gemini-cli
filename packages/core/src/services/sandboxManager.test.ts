@@ -10,10 +10,12 @@ import fsPromises from 'node:fs/promises';
 import { afterEach, describe, expect, it, vi, beforeEach } from 'vitest';
 import {
   NoopSandboxManager,
+  LocalSandboxManager,
   findSecretFiles,
   isSecretFile,
   resolveSandboxPaths,
   type SandboxRequest,
+  type GlobalSandboxOptions,
 } from './sandboxManager.js';
 import { createSandboxManager } from './sandboxManagerFactory.js';
 import { LinuxSandboxManager } from '../sandbox/linux/LinuxSandboxManager.js';
@@ -369,6 +371,52 @@ describe('SandboxManager', () => {
   });
 
   describe('createSandboxManager', () => {
+    it('should populate modeConfig from policyManager if not provided and approvalMode is present', () => {
+      const mockPolicyManager = {
+        getModeConfig: vi.fn().mockReturnValue({ network: true }),
+      };
+      const options: GlobalSandboxOptions = {
+        workspace: path.resolve('/workspace'),
+        policyManager: mockPolicyManager as any,
+      };
+
+      createSandboxManager({ enabled: false }, options, 'test-mode');
+
+      expect(mockPolicyManager.getModeConfig).toHaveBeenCalledWith('test-mode');
+      expect(options.modeConfig).toEqual({ network: true });
+    });
+
+    it('should not populate modeConfig from policyManager if modeConfig is already set', () => {
+      const mockPolicyManager = {
+        getModeConfig: vi.fn(),
+      };
+      const options: GlobalSandboxOptions = {
+        workspace: path.resolve('/workspace'),
+        policyManager: mockPolicyManager as any,
+        modeConfig: { network: false },
+      };
+
+      createSandboxManager({ enabled: false }, options, 'test-mode');
+
+      expect(mockPolicyManager.getModeConfig).not.toHaveBeenCalled();
+      expect(options.modeConfig).toEqual({ network: false });
+    });
+
+    it('should not populate modeConfig from policyManager if approvalMode is missing', () => {
+      const mockPolicyManager = {
+        getModeConfig: vi.fn(),
+      };
+      const options: GlobalSandboxOptions = {
+        workspace: path.resolve('/workspace'),
+        policyManager: mockPolicyManager as any,
+      };
+
+      createSandboxManager({ enabled: false }, options);
+
+      expect(mockPolicyManager.getModeConfig).not.toHaveBeenCalled();
+      expect(options.modeConfig).toBeUndefined();
+    });
+
     it('should return NoopSandboxManager if sandboxing is disabled', () => {
       const manager = createSandboxManager(
         { enabled: false },
@@ -400,6 +448,16 @@ describe('SandboxManager', () => {
         { workspace: path.resolve('/workspace') },
       );
       expect(manager).toBeInstanceOf(WindowsSandboxManager);
+    });
+
+    it('should return LocalSandboxManager if sandboxing is enabled but platform is not natively supported', () => {
+      // e.g. unknown platform or one we don't have a specific manager for
+      vi.spyOn(os, 'platform').mockReturnValue('freebsd' as NodeJS.Platform);
+      const manager = createSandboxManager(
+        { enabled: true },
+        { workspace: path.resolve('/workspace') },
+      );
+      expect(manager).toBeInstanceOf(LocalSandboxManager);
     });
   });
 });
