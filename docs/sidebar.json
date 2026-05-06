@@ -136,6 +136,10 @@
             ]
           },
           { "label": "Model routing", "slug": "docs/cli/model-routing" },
+          {
+            "label": "Parallel Tasks",
+            "slug": "docs/tools/task-tool"
+          },
           { "label": "Model selection", "slug": "docs/cli/model" },
           {
             "label": "Model steering",

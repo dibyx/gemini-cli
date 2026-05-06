@@ -870,7 +870,11 @@ export interface TodoList {
   todos: Todo[];
 }
 
-export type ToolLiveOutput = string | AnsiOutput | SubagentProgress;
+export type ToolLiveOutput =
+  | string
+  | AnsiOutput
+  | SubagentProgress
+  | SubagentProgress[];
 
 export interface StructuredToolResult {
   summary: string;
@@ -926,6 +930,7 @@ export type ToolResultDisplay =
   | AnsiOutput
   | TodoList
   | SubagentProgress
+  | SubagentProgress[]
   | GrepResult
   | ListDirectoryResult
   | ReadManyFilesResult;

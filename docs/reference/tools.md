@@ -72,6 +72,7 @@ each tool.
 | Tool                                     | Kind      | Description                                                                                                              |
 | :--------------------------------------- | :-------- | :----------------------------------------------------------------------------------------------------------------------- |
 | [`run_shell_command`](../tools/shell.md) | `Execute` | Executes arbitrary shell commands. Supports interactive sessions and background processes. Requires manual confirmation. |
+| [`Task`](../tools/task-tool.md)          | `Execute` | Dispatches one or more independent sub-tasks to parallel sub-agents for concurrent execution.                            |
 
 ### File System
 
