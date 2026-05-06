@@ -110,6 +110,19 @@ export const ToolResultDisplay: React.FC<ToolResultDisplayProps> = ({
           terminalWidth={childWidth}
         />
       );
+    } else if (Array.isArray(contentData) && contentData.length > 0 && isSubagentProgress(contentData[0])) {
+      // Used by Task tool which emits SubagentProgress[]
+      content = (
+        <Box flexDirection="column" gap={1}>
+          {contentData.map((progress, index) => (
+            <SubagentProgressDisplay
+              key={index}
+              progress={progress}
+              terminalWidth={childWidth}
+            />
+          ))}
+        </Box>
+      );
     } else if (typeof contentData === 'string' && renderOutputAsMarkdown) {
       content = (
         <MarkdownDisplay
